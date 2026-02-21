@@ -189,5 +189,12 @@ typedef struct
 #define SPI2_PCLK_DIS()   (RCC->APB1ENR &= ~(1 << 14))
 #define SPI3_PCLK_DIS()   (RCC->APB1ENR &= ~(1 << 15))
 
+/****************** Generic Macros ******************/
+#define ENABLE                1
+#define DISABLE               0
+#define SET                   ENABLE
+#define RESET                 DISABLE
+#define GPIO_PIN_SET           SET
+#define GPIO_PIN_RESET         RESET
 
 #endif /* INC_STM32F767XX_H_ */
