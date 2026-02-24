@@ -179,6 +179,19 @@ typedef struct
 #define GPIOJ_PCLK_DIS()   (RCC->AHB1ENR &= ~(1 << 9))
 #define GPIOK_PCLK_DIS()   (RCC->AHB1ENR &= ~(1 << 10))
 
+/* Reset Macros for GPIOx peripherals */
+#define GPIOA_REG_RESET()   do{(RCC->AHB1RSTR |= (1 << 0)); (RCC->AHB1RSTR &= ~(1 << 0));} while(0)
+#define GPIOB_REG_RESET()   do{(RCC->AHB1RSTR |= (1 << 1)); (RCC->AHB1RSTR &= ~(1 << 1));} while(0)
+#define GPIOC_REG_RESET()   do{(RCC->AHB1RSTR |= (1 << 2)); (RCC->AHB1RSTR &= ~(1 << 2));} while(0)
+#define GPIOD_REG_RESET()   do{(RCC->AHB1RSTR |= (1 << 3)); (RCC->AHB1RSTR &= ~(1 << 3));} while(0)
+#define GPIOE_REG_RESET()   do{(RCC->AHB1RSTR |= (1 << 4)); (RCC->AHB1RSTR &= ~(1 << 4));} while(0)
+#define GPIOF_REG_RESET()   do{(RCC->AHB1RSTR |= (1 << 5)); (RCC->AHB1RSTR &= ~(1 << 5));} while(0)
+#define GPIOG_REG_RESET()   do{(RCC->AHB1RSTR |= (1 << 6)); (RCC->AHB1RSTR &= ~(1 << 6));} while(0)
+#define GPIOH_REG_RESET()   do{(RCC->AHB1RSTR |= (1 << 7)); (RCC->AHB1RSTR &= ~(1 << 7));} while(0)
+#define GPIOI_REG_RESET()   do{(RCC->AHB1RSTR |= (1 << 8)); (RCC->AHB1RSTR &= ~(1 << 8));} while(0)
+#define GPIOJ_REG_RESET()   do{(RCC->AHB1RSTR |= (1 << 9)); (RCC->AHB1RSTR &= ~(1 << 9));} while(0)
+#define GPIOK_REG_RESET()   do{(RCC->AHB1RSTR |= (1 << 10)); (RCC->AHB1RSTR &= ~(1 << 10));} while(0)
+
 /* Clock Disable Macros for I2C peripherals */
 #define I2C1_PCLK_DIS()   (RCC->APB1ENR &= ~(1 << 21))
 #define I2C2_PCLK_DIS()   (RCC->APB1ENR &= ~(1 << 22))
@@ -196,5 +209,7 @@ typedef struct
 #define RESET                 DISABLE
 #define GPIO_PIN_SET           SET
 #define GPIO_PIN_RESET         RESET
+
+#include "stm32f767xx_gpio.h"
 
 #endif /* INC_STM32F767XX_H_ */

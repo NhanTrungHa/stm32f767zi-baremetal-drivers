@@ -5,29 +5,23 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
-../Src/001led_toggle.c \
-../Src/syscalls.c \
-../Src/sysmem.c 
+../drivers/Src/stm32f767xx_gpio.c 
 
 OBJS += \
-./Src/001led_toggle.o \
-./Src/syscalls.o \
-./Src/sysmem.o 
+./drivers/Src/stm32f767xx_gpio.o 
 
 C_DEPS += \
-./Src/001led_toggle.d \
-./Src/syscalls.d \
-./Src/sysmem.d 
+./drivers/Src/stm32f767xx_gpio.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
-Src/%.o Src/%.su Src/%.cyclo: ../Src/%.c Src/subdir.mk
+drivers/Src/%.o drivers/Src/%.su drivers/Src/%.cyclo: ../drivers/Src/%.c drivers/Src/subdir.mk
 	arm-none-eabi-gcc "$<" -mcpu=cortex-m7 -std=gnu11 -g3 -DDEBUG -DSTM32 -DSTM32F7 -DSTM32F767ZITx -c -I../Inc -I"C:/Users/nhant/OneDrive/Documents/stm32f767zi/Project/Inc" -I"C:/Users/nhant/OneDrive/Documents/stm32f767zi/Project/drivers/Inc" -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" --specs=nano.specs -mfpu=fpv5-d16 -mfloat-abi=hard -mthumb -o "$@"
 
-clean: clean-Src
+clean: clean-drivers-2f-Src
 
-clean-Src:
-	-$(RM) ./Src/001led_toggle.cyclo ./Src/001led_toggle.d ./Src/001led_toggle.o ./Src/001led_toggle.su ./Src/syscalls.cyclo ./Src/syscalls.d ./Src/syscalls.o ./Src/syscalls.su ./Src/sysmem.cyclo ./Src/sysmem.d ./Src/sysmem.o ./Src/sysmem.su
+clean-drivers-2f-Src:
+	-$(RM) ./drivers/Src/stm32f767xx_gpio.cyclo ./drivers/Src/stm32f767xx_gpio.d ./drivers/Src/stm32f767xx_gpio.o ./drivers/Src/stm32f767xx_gpio.su
 
-.PHONY: clean-Src
+.PHONY: clean-drivers-2f-Src
 

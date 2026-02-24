@@ -1,4 +1,5 @@
-"./Src/main.o"
+"./Src/001led_toggle.o"
 "./Src/syscalls.o"
 "./Src/sysmem.o"
 "./Startup/startup_stm32f767zitx.o"
+"./drivers/Src/stm32f767xx_gpio.o"
