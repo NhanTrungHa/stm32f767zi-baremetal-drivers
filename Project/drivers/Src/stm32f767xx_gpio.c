@@ -27,12 +27,48 @@ uint32_t temp = 0;
         // Non-interrupt mode
         // 1. Configure the mode of the GPIO pin
         temp = (pGPIOHandle->GPIO_PinConfig.GPIO_PinMode << (2 * pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber));
-        pGPIOHandle->pGPIOx->MODER = temp; 
+        pGPIOHandle->pGPIOx->MODER = temp;
         
    }
    else
    {
        // Interrupt mode
+       if(pGPIOHandle->GPIO_PinConfig.GPIO_PinMode == GPIO_MODE_IT_FT)
+       {
+            // 1. Configure the falling trigger selection register (FTSR) for the GPIO pin'
+            EXTI->FTSR |= (1 << pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber);
+
+            // Clear the corresponding bit in the rising trigger selection register (RTSR) for the GPIO pin
+            EXTI->RTSR &= ~(1 << pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber);
+       }
+       else if(pGPIOHandle->GPIO_PinConfig.GPIO_PinMode == GPIO_MODE_IT_RT)
+       {
+            // 1. Configure the rising trigger selection register (RTSR) for the GPIO pin
+            EXTI->RTSR |= (1 << pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber);
+
+            // Clear the corresponding bit in the falling trigger selection register (FTSR) for the GPIO pin
+            EXTI->FTSR &= ~(1 << pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber);
+       }
+       else if(pGPIOHandle->GPIO_PinConfig.GPIO_PinMode == GPIO_MODE_IT_RFT)
+       {
+            // 1. Configure both the rising and falling trigger selection registers (RTSR and FTSR) for the GPIO pin
+            EXTI->RTSR |= (1 << pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber);
+
+            // Configure the falling trigger selection register (FTSR) for the GPIO pin
+            EXTI->FTSR |= (1 << pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber);
+
+    
+       }
+
+       // 2. Configure the GPIO port selection in the SYSCFG_EXTICR register for the GPIO pin
+        uint8_t temp1 = pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber / 4;
+        uint8_t temp2 = pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber % 4;
+        uint8_t portcode = GPIO_BASEADDR_TO_CODE(pGPIOHandle->pGPIOx);
+        SYSCFG_PCLK_EN();
+        SYSCFG->EXTICR[temp1] = portcode << (temp2 * 4);
+
+       // 3. Enable the EXTI interrupt delivery using the IMR (Interrupt Mask Register) for the GPIO pin
+         EXTI->IMR |= (1 << pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber);
    }
 
    temp = 0;
@@ -286,7 +322,7 @@ void GPIO_ToggleOutputPin(GPIO_RegDef_t *pGPIOx, uint16_t PinNumber)
 /****************** GPIO IRQ Configuration and ISR handling functions ******************/
 
 /*******************************************
-    * @fn				- GPIO_IRQConfig
+    * @fn				- GPIO_IRQInterruptConfig
     * @brief			- This function configures the IRQ for the specified GPIO pin
     * @param[in]		- IRQNumber: IRQ number for the GPIO pin
     * @param[in]		- IRQPriority: Priority of the IRQ
@@ -294,8 +330,44 @@ void GPIO_ToggleOutputPin(GPIO_RegDef_t *pGPIOx, uint16_t PinNumber)
     * @return			- None
     * Note			- None
     *******************************************/
-void GPIO_IRQConfig(uint8_t IRQNumber, uint8_t IRQPriority, uint8_t EnorDi)
+void GPIO_IRQInterruptConfig(uint8_t IRQNumber, uint8_t EnorDi)
 {
+    if(EnorDi == ENABLE)
+    {
+        if (IRQNumber <= 31)
+        {
+            // Configure ISER0 register for IRQ numbers 0 to 31
+            *NVIC_ISER0 |= (1 << IRQNumber);
+        }
+        else if (IRQNumber > 31 && IRQNumber < 64)
+        {
+            // Configure ISER1 register for IRQ numbers 32 to 63
+            *NVIC_ISER1 |= (1 << (IRQNumber % 32));
+        }
+        else if (IRQNumber >= 64 && IRQNumber < 96)
+        {
+            // Configure ISER2 register for IRQ numbers 64 to 95
+            *NVIC_ISER2 |= (1 << (IRQNumber % 64));
+        }
+    }
+    else
+    {
+        if (IRQNumber <= 31)
+        {
+            // Configure ICER0 register for IRQ numbers 0 to 31
+            *NVIC_ICER0 |= (1 << IRQNumber);
+        }
+        else if (IRQNumber > 31 && IRQNumber < 64)
+        {
+            // Configure ICER1 register for IRQ numbers 32 to 63
+            *NVIC_ICER1 |= (1 << (IRQNumber % 32));
+        }
+        else if (IRQNumber >= 64 && IRQNumber < 96)
+        {
+            // Configure ICER2 register for IRQ numbers 64 to 95
+            *NVIC_ICER2 |= (1 << (IRQNumber % 64));
+        }
+    }
 }
 
 /*******************************************
@@ -307,5 +379,27 @@ void GPIO_IRQConfig(uint8_t IRQNumber, uint8_t IRQPriority, uint8_t EnorDi)
     *******************************************/
 void GPIO_IRQHandling(uint16_t PinNumber)
 {
+    // Clear the EXTI pending register corresponding to the pin number
+    if (EXTI->PR & (1 << PinNumber))
+    {
+        // Clear the pending bit by writing 1 to it
+        EXTI->PR |= (1 << PinNumber);
+    }
 }
 
+/*******************************************
+    * @fn				- GPIO_IRQPriorityConfig
+    * @brief			- This function configures the priority of the IRQ for the specified GPIO pin
+    * @param[in]		- IRQNumber: IRQ number for the GPIO pin
+    * @param[in]		- IRQPriority: Priority of the IRQ
+    * @return			- None
+    * Note			- None
+    *******************************************/
+void GPIO_IRQPriorityConfig(uint8_t IRQNumber, uint32_t IRQPriority)
+{
+    uint8_t iprx = IRQNumber / 4;
+    uint8_t iprx_section = IRQNumber % 4;
+
+    uint8_t shift_amount = (8 * iprx_section) + (8 - NO_PR_BITS_IMPLEMENTED);
+    *(NVIC_PR_BASEADDR + iprx) |= (IRQPriority << shift_amount);
+}
